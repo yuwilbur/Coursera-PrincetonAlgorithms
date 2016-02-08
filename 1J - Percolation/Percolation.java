@@ -2,17 +2,16 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
   private WeightedQuickUnionUF quickUnion;
-  private WeightedQuickUnionUF fullUnion;
   // STATES
   // bit[0] = isOpen
-  // bit[1] = isFull
+  // bit[1] = isConnectedToTop (Effectively Full)
+  // bit[2] = isConnectedToBot 
   private byte[] state;
   private byte isOpen;
-  private byte isFull;
+  private byte connectsTop;
+  private byte connectsBot;
   
   private int dimension;
-  private int indexStart;
-  private int indexEnd;
   private boolean percolates;
   
   public Percolation(int dimension) {
@@ -20,23 +19,20 @@ public class Percolation {
       throw new java.lang.IllegalArgumentException("Dimension out of bounds.");
     int surfaceArea = dimension * dimension;
     // Add 2 extra nodes for beginning and ending positions
-    this.quickUnion = new WeightedQuickUnionUF(surfaceArea + 2);
-    this.fullUnion = new WeightedQuickUnionUF(surfaceArea + 1);
+    this.quickUnion = new WeightedQuickUnionUF(surfaceArea);
     this.state = new byte[surfaceArea];
     this.isOpen = Byte.parseByte("00000001", 2);
-    this.isFull = Byte.parseByte("00000010", 2);
+    this.connectsTop = Byte.parseByte("00000010", 2);
+    this.connectsBot = Byte.parseByte("00000100", 2);
     this.dimension = dimension;
-    this.indexStart = surfaceArea;
-    this.indexEnd = surfaceArea + 1;
     this.percolates = false;
     
-    for (int p = 0; p < dimension; p++) {
-      quickUnion.union(p, indexStart);
-      fullUnion.union(p, indexStart);
+    for (int i = 0; i < dimension; i++) {
+      setConnectsTop(i);
     }
     
-    for (int p = surfaceArea - dimension; p < surfaceArea; p++) {
-      quickUnion.union(p, indexEnd);
+    for (int i = surfaceArea - dimension; i < surfaceArea; i++) {
+      setConnectsBot(i);
     }
   }
   
@@ -53,8 +49,8 @@ public class Percolation {
     tryUnion(x, y, x, y - 1);
     tryUnion(x, y, x, y + 1);
     
-    // Check if percolation has occurred
-    if (!this.percolates && quickUnion.connected(indexStart, indexEnd)) {
+    int root = quickUnion.find(index);
+    if (connectsTop(root) && connectsBot(root)) {
       this.percolates = true;
     }
   }
@@ -68,33 +64,19 @@ public class Percolation {
   public boolean isFull(int x, int y) {
     checkBoundaries(x, y);
     int index = convertXYtoIndex(x, y);
-    if (isOpen(index) && !isFull(index)) {
-      if (fullUnion.connected(index, indexStart)) {
-        setFull(index);
-      }
-    } 
-    return isFull(index);
+    return isOpen(index) && connectsTop(quickUnion.find(index));
   }
   
   public boolean percolates() {
     return percolates;
   }
   
-  private boolean isFull(int index) {
-    return (state[index] & isFull) > 0;
-  }
-  
-  private void setFull(int index) {
-    state[index] |= isFull;
-  }
-  
-  private boolean isOpen(int index) {
-    return (state[index] & isOpen) > 0;
-  }
-  
-  private void setOpen(int index) {
-    state[index] |= isOpen;
-  }
+  private boolean isOpen(int index) { return (state[index] & isOpen) > 0; }
+  private void setOpen(int index) { state[index] |= isOpen; }
+  private boolean connectsTop(int index) { return (state[index] & connectsTop) > 0; }
+  private void setConnectsTop(int index) { state[index] |= connectsTop; }
+  private boolean connectsBot(int index) { return (state[index] & connectsBot) > 0; }
+  private void setConnectsBot(int index) { state[index] |= connectsBot; }
   
   private void checkBoundaries(int x, int y) {
     if (!isWithinBounds(x, y))
@@ -115,9 +97,18 @@ public class Percolation {
     
     int p = convertXYtoIndex(x1, y1);
     int q = convertXYtoIndex(x2, y2);
-    if (isOpen(p) && isOpen(q)) {
-      quickUnion.union(p, q);
-      fullUnion.union(p, q);
+    if (isOpen(q)) {
+      int pRoot = quickUnion.find(p);
+      int qRoot = quickUnion.find(q);
+      if (connectsTop(pRoot) || connectsTop(qRoot)) {
+        setConnectsTop(pRoot);
+        setConnectsTop(qRoot);
+      }
+      if (connectsBot(pRoot) || connectsBot(qRoot)) {
+        setConnectsBot(pRoot);
+        setConnectsBot(qRoot);
+      }
+      quickUnion.union(pRoot, qRoot);
     }
   }
 }
