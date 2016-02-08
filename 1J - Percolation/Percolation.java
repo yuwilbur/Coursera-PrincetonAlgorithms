@@ -3,28 +3,48 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 public class Percolation {
   private WeightedQuickUnionUF quickUnion;
   private boolean[] isOpen;
-  //private boolean[] isFull;
+  private boolean[] isFull;
   private int dimension;
-    
+  private int indexStart;
+  private boolean percolates;
+  
   public Percolation(int dimension) {
     if (dimension <= 0)
       throw new java.lang.IllegalArgumentException("Dimension out of bounds.");
     int surfaceArea = dimension * dimension;
-    quickUnion = new WeightedQuickUnionUF(surfaceArea);
-    isOpen = new boolean[surfaceArea];
-    //isFull = new boolean[surfaceArea];
+    // Add 2 extra nodes for beginning and ending positions
+    this.quickUnion = new WeightedQuickUnionUF(surfaceArea + 1);
+    this.isOpen = new boolean[surfaceArea];
+    this.isFull = new boolean[surfaceArea];
     this.dimension = dimension;
+    this.indexStart = surfaceArea;
+    this.percolates = false;
   }
   
   public void open (int x, int y) {
     checkBoundaries(x, y);
     int index = convertXYtoIndex(x, y);
+    // This cell is already open
+    if (isOpen[index])
+      return;
     isOpen[index] = true;
     
     tryUnion(x, y, x - 1, y);
     tryUnion(x, y, x + 1, y);
     tryUnion(x, y, x, y - 1);
     tryUnion(x, y, x, y + 1);
+    
+    // Link the top cell with the starting (hidden) cell
+    if (x == 1) {
+      quickUnion.union(index, indexStart);
+    }
+    
+    // Check if percolation has occurred
+    for(int i = isOpen.length - dimension; i < isOpen.length; i++) {
+      if(isOpen[i] && quickUnion.connected(i, indexStart)) {
+        this.percolates = true;
+      }
+    }
   }
   
   public boolean isOpen(int x, int y) {
@@ -36,31 +56,21 @@ public class Percolation {
   public boolean isFull(int x, int y) {
     checkBoundaries(x, y);
     int p = convertXYtoIndex(x, y);
-    if (!isOpen[p])
-      return false;
-    if (x == 1)
-      return true;
-    checkBoundaries(x, y);
-    for(int i = 1; i <= dimension; i++) {
-      int q = convertXYtoIndex(1, i);
-      if (quickUnion.connected(p, q))
-        return true;
-    }
-    return false;
+    if (!isFull[p] && isOpen[p]) {
+      if (quickUnion.connected(p, indexStart)) {
+        isFull[p] = true;
+      }
+    } 
+    return isFull[p];
   }
   
   public boolean percolates() {
-    for(int y = 1; y <= dimension; y++) {
-      if (isFull(dimension, y)) {
-        return true;
-      }
-    }
-    return false;
+    return percolates;
   }
   
   private void checkBoundaries(int x, int y) {
     if (!isWithinBounds(x, y))
-      throw new java.lang.IndexOutOfBoundsException("(" + x + "," + y + ") out of bounds. Should be within (1,1)~(" + dimension + "," + dimension + ")");
+      throw new java.lang.IndexOutOfBoundsException("(" + x + "," + y + ") out of bounds.");
   }
   
   private boolean isWithinBounds(int x, int y) {
@@ -71,7 +81,7 @@ public class Percolation {
   }
   
   private int convertXYtoIndex(int x, int y) {
-    return ((y - 1) * dimension + (x - 1));
+    return ((x - 1) * dimension + (y - 1));
   }
   
   private void tryUnion(int x1, int y1, int x2, int y2) {

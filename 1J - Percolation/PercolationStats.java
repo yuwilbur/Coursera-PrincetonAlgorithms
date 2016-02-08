@@ -2,10 +2,10 @@ import edu.princeton.cs.algs4.StdStats;
 import edu.princeton.cs.algs4.StdRandom;
 
 public class PercolationStats {
-  private double m_mean;
-  private double m_stddev;
-  private double m_confidenceLo;
-  private double m_confidenceHi;
+  private double mean;
+  private double stddev;
+  private double confidenceLo;
+  private double confidenceHi;
   
   public PercolationStats(int N, int T) {
     if (N <= 0)
@@ -13,10 +13,10 @@ public class PercolationStats {
     if (T <= 0)
       throw new java.lang.IllegalArgumentException("T needs to be positive.");
     
-    m_mean = 0;
-    m_stddev =0;
-    m_confidenceLo = 0;
-    m_confidenceHi = 0;
+    mean = 0;
+    stddev =0;
+    confidenceLo = 0;
+    confidenceHi = 0;
     
     int maxIterationToPercolate = N * N;
     double[] percolationThreshold = new double[T];
@@ -36,30 +36,30 @@ public class PercolationStats {
       percolationThreshold[i] = (double)iterationsToPercolate / (double)maxIterationToPercolate;
     }
     
-    m_mean = StdStats.mean(percolationThreshold);
-    m_stddev = StdStats.stddev(percolationThreshold);
-    m_confidenceLo = m_mean - 1.96 * m_stddev / Math.sqrt(T);
-    m_confidenceHi = m_mean + 1.96 * m_stddev / Math.sqrt(T);
+    mean = StdStats.mean(percolationThreshold);
+    stddev = StdStats.stddev(percolationThreshold);
+    confidenceLo = mean - 1.96 * stddev / Math.sqrt(T);
+    confidenceHi = mean + 1.96 * stddev / Math.sqrt(T);
   }
   
   public double mean() {
-    return m_mean;
+    return mean;
   }
   
   public double stddev() {
-    return m_stddev;
+    return stddev;
   }
   
   public double confidenceLo() {
-    return m_confidenceLo;
+    return confidenceLo;
   }
   
   public double confidenceHi() {
-    return m_confidenceHi;
+    return confidenceHi;
   }
   
   public static void main(String[] args) {
-    PercolationStats stats = new PercolationStats(200, 10);
+    PercolationStats stats = new PercolationStats(200, 100);
     System.out.println("mean = " + stats.mean());
     System.out.println("stddev = " + stats.stddev());
     System.out.println("confidence = " + stats.confidenceLo() + "," + stats.confidenceHi());
