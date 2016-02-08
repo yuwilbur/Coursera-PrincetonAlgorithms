@@ -14,26 +14,26 @@ public class PercolationStats {
       throw new java.lang.IllegalArgumentException("T needs to be positive.");
     
     mean = 0;
-    stddev =0;
+    stddev = 0;
     confidenceLo = 0;
     confidenceHi = 0;
     
     int maxIterationToPercolate = N * N;
     double[] percolationThreshold = new double[T];
-    for(int i = 0; i < T; i++) {
+    for (int i = 0; i < T; i++) {
       Percolation percolation = new Percolation(N);
       int iterationsToPercolate = 0;
-      while(!percolation.percolates()) {
+      while (!percolation.percolates()) {
         int x = StdRandom.uniform(N) + 1;
         int y = StdRandom.uniform(N) + 1;
-        while (percolation.isOpen(x,y)) {
+        while (percolation.isOpen(x, y)) {
           x = StdRandom.uniform(N) + 1;
           y = StdRandom.uniform(N) + 1;
         }
-        percolation.open(x,y);
+        percolation.open(x, y);
         iterationsToPercolate++;
       }
-      percolationThreshold[i] = (double)iterationsToPercolate / (double)maxIterationToPercolate;
+      percolationThreshold[i] = (double) iterationsToPercolate / (double) maxIterationToPercolate;
     }
     
     mean = StdStats.mean(percolationThreshold);
