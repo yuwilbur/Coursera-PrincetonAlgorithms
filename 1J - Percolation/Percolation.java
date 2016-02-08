@@ -1,121 +1,87 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
-  private class Coord2D {
-    public int x;
-    public int y;
-    public Coord2D(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
-  }
-  
-  private WeightedQuickUnionUF m_quickUnion;
-  private boolean[][] m_isOpen;
-  private int m_dimension;
+  private WeightedQuickUnionUF quickUnion;
+  private boolean[] isOpen;
+  //private boolean[] isFull;
+  private int dimension;
     
   public Percolation(int dimension) {
     if (dimension <= 0)
       throw new java.lang.IllegalArgumentException("Dimension out of bounds.");
-    m_quickUnion = new WeightedQuickUnionUF(dimension * dimension);
-    m_isOpen = new boolean[dimension][dimension];
-    m_dimension = dimension;
+    int surfaceArea = dimension * dimension;
+    quickUnion = new WeightedQuickUnionUF(surfaceArea);
+    isOpen = new boolean[surfaceArea];
+    //isFull = new boolean[surfaceArea];
+    this.dimension = dimension;
   }
   
   public void open (int x, int y) {
-    // (1,1) is origin so -1 is required
-    Coord2D coord_p = new Coord2D(x - 1, y - 1);
-    checkBoundaries(coord_p);
-    Coord2D coord_q = new Coord2D(coord_p.x,coord_p.y);
-    m_isOpen[coord_p.x][coord_p.y] = true;
+    checkBoundaries(x, y);
+    int index = convertXYtoIndex(x, y);
+    isOpen[index] = true;
     
-    coord_q.x = coord_p.x + 1;
-    coord_q.y = coord_p.y;
-    tryUnion(coord_p,coord_q);
-    
-    coord_q.x = coord_p.x - 1;
-    coord_q.y = coord_p.y;
-    tryUnion(coord_p,coord_q);
-    
-    coord_q.x = coord_p.x;
-    coord_q.y = coord_p.y + 1;
-    tryUnion(coord_p,coord_q);
-    
-    coord_q.x = coord_p.x;
-    coord_q.y = coord_p.y - 1;
-    tryUnion(coord_p,coord_q);
+    tryUnion(x, y, x - 1, y);
+    tryUnion(x, y, x + 1, y);
+    tryUnion(x, y, x, y - 1);
+    tryUnion(x, y, x, y + 1);
   }
   
   public boolean isOpen(int x, int y) {
-    // (1,1) is origin so -1 is required
-    Coord2D coord = new Coord2D(x - 1, y - 1);
-    return isOpen(coord);
+    checkBoundaries(x, y);
+    int index = convertXYtoIndex(x, y);
+    return isOpen[index];
   }
   
   public boolean isFull(int x, int y) {
-    // (1,1) is origin so -1 is required
-    Coord2D coord = new Coord2D(x - 1, y - 1);
-    if (!isOpen(coord))
+    checkBoundaries(x, y);
+    int p = convertXYtoIndex(x, y);
+    if (!isOpen[p])
       return false;
-    return isFull(coord);
+    if (x == 1)
+      return true;
+    checkBoundaries(x, y);
+    for(int i = 1; i <= dimension; i++) {
+      int q = convertXYtoIndex(1, i);
+      if (quickUnion.connected(p, q))
+        return true;
+    }
+    return false;
   }
   
   public boolean percolates() {
-    Coord2D coord = new Coord2D(m_dimension - 1, 0);
-    for(coord.y = 0; coord.y < m_dimension; coord.y++) {
-      if (isFull(coord)) {
+    for(int y = 1; y <= dimension; y++) {
+      if (isFull(dimension, y)) {
         return true;
       }
     }
     return false;
   }
   
-  private boolean isOpen(Coord2D coord) {
-    checkBoundaries(coord);
-    return m_isOpen[coord.x][coord.y];
+  private void checkBoundaries(int x, int y) {
+    if (!isWithinBounds(x, y))
+      throw new java.lang.IndexOutOfBoundsException("(" + x + "," + y + ") out of bounds. Should be within (1,1)~(" + dimension + "," + dimension + ")");
   }
   
-  private boolean isFull(Coord2D coord_p) {
-    checkBoundaries(coord_p);
-    if (coord_p.x == 0)
-      return true;
-    // Check if it's connected to any of the top row cells
-    Coord2D coord_q = new Coord2D(coord_p.x, coord_p.y);
-    int p = convertXYtoIndex(coord_p);
-    coord_q.x = 0;
-    for(coord_q.y = 0; coord_q.y < m_dimension; coord_q.y++) {
-      int q = convertXYtoIndex(coord_q);
-      if (m_quickUnion.connected(p,q)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  private void checkBoundaries(Coord2D coord) {
-    if (!isWithinBounds(coord))
-      throw new java.lang.IndexOutOfBoundsException("(" + coord.x + "," + coord.y + ") outside of (" + m_dimension + "," + m_dimension + ")");
-  }
-  
-  private boolean isWithinBounds(Coord2D coord) {
-    if (coord.x < 0 || coord.x >= m_dimension || coord.y < 0 || coord.y >= m_dimension)
+  private boolean isWithinBounds(int x, int y) {
+    if (x < 1 || x > dimension || y < 1 || y > dimension)
       return false;
     else
       return true;
   }
   
-  private int convertXYtoIndex(Coord2D coord) {
-    return (coord.y * m_dimension + coord.x);
+  private int convertXYtoIndex(int x, int y) {
+    return ((y - 1) * dimension + (x - 1));
   }
   
-  private void tryUnion(Coord2D coord_p, Coord2D coord_q) {
-    if (!isWithinBounds(coord_p) || !isWithinBounds(coord_q))
+  private void tryUnion(int x1, int y1, int x2, int y2) {
+    if (!isWithinBounds(x1, y1) || !isWithinBounds(x2, y2))
       return;
     
-    if (isOpen(coord_p) && isOpen(coord_q)) {
-      int p = convertXYtoIndex(coord_p);
-      int q = convertXYtoIndex(coord_q);
-      m_quickUnion.union(p,q);
+    int p = convertXYtoIndex(x1, y1);
+    int q = convertXYtoIndex(x2, y2);
+    if (isOpen[p] && isOpen[q]) {
+      quickUnion.union(p,q);
     }
   }
 }
