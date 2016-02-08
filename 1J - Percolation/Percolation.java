@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
@@ -25,13 +24,26 @@ public class Percolation {
   
   public void open (int x, int y) {
     // (1,1) is origin so -1 is required
-    Coord2D coord = new Coord2D(x - 1, y - 1);
-    checkBoundaries(coord);
-    m_isOpen[coord.x][coord.y] = true;
-    tryUnion(coord,new Coord2D(coord.x + 1, coord.y));
-    tryUnion(coord,new Coord2D(coord.x - 1, coord.y));
-    tryUnion(coord,new Coord2D(coord.x, coord.y + 1));
-    tryUnion(coord,new Coord2D(coord.x, coord.y - 1));
+    Coord2D coord_p = new Coord2D(x - 1, y - 1);
+    checkBoundaries(coord_p);
+    Coord2D coord_q = new Coord2D(coord_p.x,coord_p.y);
+    m_isOpen[coord_p.x][coord_p.y] = true;
+    
+    coord_q.x = coord_p.x + 1;
+    coord_q.y = coord_p.y;
+    tryUnion(coord_p,coord_q);
+    
+    coord_q.x = coord_p.x - 1;
+    coord_q.y = coord_p.y;
+    tryUnion(coord_p,coord_q);
+    
+    coord_q.x = coord_p.x;
+    coord_q.y = coord_p.y + 1;
+    tryUnion(coord_p,coord_q);
+    
+    coord_q.x = coord_p.x;
+    coord_q.y = coord_p.y - 1;
+    tryUnion(coord_p,coord_q);
   }
   
   public boolean isOpen(int x, int y) {
@@ -49,11 +61,11 @@ public class Percolation {
   }
   
   public boolean percolates() {
-    // Check if it's connected to any of the bottom row cells
-    int x = m_dimension - 1;
-    for(int y = 0; y < m_dimension; y++) {
-      if (isFull(new Coord2D(x,y)))
+    Coord2D coord = new Coord2D(m_dimension - 1, 0);
+    for(coord.y = 0; coord.y < m_dimension; coord.y++) {
+      if (isFull(coord)) {
         return true;
+      }
     }
     return false;
   }
@@ -63,17 +75,19 @@ public class Percolation {
     return m_isOpen[coord.x][coord.y];
   }
   
-  private boolean isFull(Coord2D coord) {
-    checkBoundaries(coord);
-    if (coord.x == 0)
+  private boolean isFull(Coord2D coord_p) {
+    checkBoundaries(coord_p);
+    if (coord_p.x == 0)
       return true;
     // Check if it's connected to any of the top row cells
-    int p = convertXYtoIndex(coord);
-    int x = 0;
-    for(int y = 0; y < m_dimension; y++) {
-      int q = convertXYtoIndex(new Coord2D(x, y));
-      if (m_quickUnion.connected(p,q))
+    Coord2D coord_q = new Coord2D(coord_p.x, coord_p.y);
+    int p = convertXYtoIndex(coord_p);
+    coord_q.x = 0;
+    for(coord_q.y = 0; coord_q.y < m_dimension; coord_q.y++) {
+      int q = convertXYtoIndex(coord_q);
+      if (m_quickUnion.connected(p,q)) {
         return true;
+      }
     }
     return false;
   }
@@ -102,16 +116,6 @@ public class Percolation {
       int p = convertXYtoIndex(coord_p);
       int q = convertXYtoIndex(coord_q);
       m_quickUnion.union(p,q);
-    }
-  }
-  
-  public static void main(String[] args) {
-    int dim = 10;
-    Percolation percolation = new Percolation(dim);
-    while(!percolation.percolates()) {
-      int x = StdRandom.uniform(dim) + 1;
-      int y = StdRandom.uniform(dim) + 1;
-      percolation.open(x,y);
     }
   }
 }
