@@ -9,6 +9,7 @@ public class Percolation {
   private byte[] state;
   private byte isOpen;
   private byte isFull;
+  
   private int dimension;
   private int indexStart;
   private int indexEnd;
@@ -43,9 +44,9 @@ public class Percolation {
     checkBoundaries(x, y);
     int index = convertXYtoIndex(x, y);
     // This cell is already open
-    if ((state[index] & isOpen) > 0)
+    if (isOpen(index))
       return;
-    state[index] |= isOpen;
+    setOpen(index);
     
     tryUnion(x, y, x - 1, y);
     tryUnion(x, y, x + 1, y);
@@ -61,22 +62,38 @@ public class Percolation {
   public boolean isOpen(int x, int y) {
     checkBoundaries(x, y);
     int index = convertXYtoIndex(x, y);
-    return (state[index] > 0);
+    return isOpen(index);
   }
   
   public boolean isFull(int x, int y) {
     checkBoundaries(x, y);
     int index = convertXYtoIndex(x, y);
-    if ((state[index] & isOpen) > 0 && (state[index] & isFull) == 0) {
+    if (isOpen(index) && !isFull(index)) {
       if (fullUnion.connected(index, indexStart)) {
-        state[index] |= isFull;
+        setFull(index);
       }
     } 
-    return (state[index] & isFull) > 0;
+    return isFull(index);
   }
   
   public boolean percolates() {
     return percolates;
+  }
+  
+  private boolean isFull(int index) {
+    return (state[index] & isFull) > 0;
+  }
+  
+  private void setFull(int index) {
+    state[index] |= isFull;
+  }
+  
+  private boolean isOpen(int index) {
+    return (state[index] & isOpen) > 0;
+  }
+  
+  private void setOpen(int index) {
+    state[index] |= isOpen;
   }
   
   private void checkBoundaries(int x, int y) {
@@ -98,7 +115,7 @@ public class Percolation {
     
     int p = convertXYtoIndex(x1, y1);
     int q = convertXYtoIndex(x2, y2);
-    if (state[p] > 0 && state[q] > 0) {
+    if (isOpen(p) && isOpen(q)) {
       quickUnion.union(p, q);
       fullUnion.union(p, q);
     }
