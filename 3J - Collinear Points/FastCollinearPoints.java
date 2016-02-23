@@ -2,13 +2,13 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
 
-public class BruteCollinearPoints {
+public class FastCollinearPoints {
   private LineSegment[] segments;
   private int[] upperArray;
   private int[] lowerArray;
   private int segmentsLength;
   
-  public BruteCollinearPoints(Point[] points) {
+  public FastCollinearPoints(Point[] points) {
     if (points.length == 0)
       throw new java.lang.NullPointerException();
     
@@ -112,7 +112,7 @@ public class BruteCollinearPoints {
     
     // print and draw the line segments
     StdDraw.setPenRadius(0.005);
-    BruteCollinearPoints collinear = new BruteCollinearPoints(points);
+    FastCollinearPoints collinear = new FastCollinearPoints(points);
     for (LineSegment segment : collinear.segments()) {
       StdOut.println(segment);
       segment.draw();

@@ -12,9 +12,8 @@ import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
 
 public class Point implements Comparable<Point> {
-  
-  public final int x;     // x-coordinate of this point
-  public final int y;     // y-coordinate of this point
+  private final int x;     // x-coordinate of this point
+  private final int y;     // y-coordinate of this point
   
   /**
    * Initializes a new point.
@@ -64,6 +63,8 @@ public class Point implements Comparable<Point> {
       return Double.NEGATIVE_INFINITY;
     if (this.x == that.x)
       return Double.POSITIVE_INFINITY;
+    if (that.y == this.y)
+      return +0.0;
     return (double)(that.y - this.y) / (double)(that.x - this.x);
   }
   
@@ -131,9 +132,5 @@ public class Point implements Comparable<Point> {
    */
   public static void main(String[] args) {
     /* YOUR CODE HERE */
-    Point pt1 = new Point(0, 1);
-    Point pt2 = new Point(1, 0);
-    System.out.println(pt1.slopeTo(pt2));
-    System.out.println(pt2.slopeTo(pt1));
   }
 }
